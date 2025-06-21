@@ -16,6 +16,8 @@ export default function FoxTherapist() {
   const [input, setInput] = useState("");
   const [botStatus, setBotStatus] = useState("idle"); // idle, listening, speaking, thinking
   const recognitionRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -70,41 +72,52 @@ export default function FoxTherapist() {
     }
   }
 
-  const handleVoiceClick = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Sorry, your browser doesn't support voice recognition.");
-      return;
+  const handleVoiceClick = async () => {
+    if (botStatus === "listening") {
+      mediaRecorderRef.current?.stop();
+      setBotStatus("thinking");
+    } else {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorderRef.current = new MediaRecorder(stream);
+        audioChunksRef.current = [];
+
+        mediaRecorderRef.current.ondataavailable = (event) => {
+          audioChunksRef.current.push(event.data);
+        };
+
+        mediaRecorderRef.current.onstop = async () => {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          const formData = new FormData();
+          formData.append('file', audioBlob, 'recording.webm');
+
+          try {
+            const response = await fetch('/api/transcribe', {
+              method: 'POST',
+              body: formData,
+            });
+            const data = await response.json();
+            if (response.ok) {
+              appendMessage(data.text, "user");
+              botReply(data.text);
+            } else {
+              console.error('Transcription error:', data.error);
+              appendMessage("Sorry, I couldn't understand that.", "bot");
+            }
+          } catch (error) {
+            console.error('Error sending audio:', error);
+          } finally {
+            setBotStatus("idle");
+          }
+        };
+
+        mediaRecorderRef.current.start();
+        setBotStatus("listening");
+      } catch (error) {
+        console.error("Error getting audio stream:", error);
+        alert("Could not access microphone.");
+      }
     }
-
-    if (recognitionRef.current && botStatus === "listening") {
-      recognitionRef.current.stop();
-      return;
-    }
-
-    recognitionRef.current = new SpeechRecognition();
-    recognitionRef.current.lang = 'en-US';
-
-    recognitionRef.current.onstart = () => {
-      setBotStatus("listening");
-    };
-
-    recognitionRef.current.onresult = (event: any) => {
-      const userText = event.results[0][0].transcript;
-      appendMessage(userText, "user");
-      botReply(userText);
-    };
-
-    recognitionRef.current.onerror = (event: any) => {
-      console.error('Voice recognition error:', event.error);
-      setBotStatus("idle");
-    };
-
-    recognitionRef.current.onend = () => {
-      setBotStatus("idle");
-    };
-    
-    recognitionRef.current.start();
   };
 
   function goBack() {
