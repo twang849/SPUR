@@ -1,103 +1,243 @@
-import Image from "next/image";
+"use client";
+import React, { useState } from 'react';
 
-export default function Home() {
+interface Animal {
+  emoji: string;
+  name: string;
+  title: string;
+  personality: string;
+  therapy: string;
+  specialty: string;
+  signature: string;
+}
+
+const animals: Animal[] = [
+  {
+    emoji: '🐼',
+    name: 'Panda',
+    title: 'The Stoic Listener',
+    personality: 'Calm, grounded, serene',
+    therapy: 'Quiet, supportive presence who lets you speak freely and only offers deep, reflective feedback',
+    specialty: 'Overthinking, emotional burnout, inner peace',
+    signature: '“Stillness reveals what noise hides.”',
+  },
+  {
+    emoji: '🦁',
+    name: 'Lion',
+    title: 'The Proud Motivator',
+    personality: 'Bold, assertive, dignified',
+    therapy: 'Direct and empowering; encourages you to own your voice and stand tall',
+    specialty: 'Self-confidence, imposter syndrome, leadership stress',
+    signature: '“Remember who you are.”',
+  },
+  {
+    emoji: '🐱',
+    name: 'Cat',
+    title: 'The Relaxed Realist',
+    personality: 'Chill, slightly aloof, emotionally intelligent',
+    therapy: "Casual and nonjudgmental; helps you relax and not take life too seriously",
+    specialty: 'Social anxiety, perfectionism, burnout from overworking',
+    signature: "You don't need to have it all together — just land on your feet.",
+  },
+  {
+    emoji: '🦊',
+    name: 'Fox',
+    title: 'The Clever Strategist',
+    personality: 'Witty, smart, adaptable',
+    therapy: 'Creative solutions and perspective shifts; always finds a workaround',
+    specialty: 'Decision-making stress, masking emotions, self-sabotage',
+    signature: "There's always a clever way forward.",
+  },
+  {
+    emoji: '🐘',
+    name: 'Elephant',
+    title: 'The Gentle Healer',
+    personality: 'Wise, empathetic, deeply thoughtful',
+    therapy: 'Uses stories, metaphors, and long-term perspective to heal emotional wounds',
+    specialty: 'Grief, trauma, long-term emotional pain',
+    signature: 'Even the heaviest memories can be carried with grace.',
+  },
+];
+
+export default function AnimalTherapistPage() {
+  const [selectedIdx, setSelectedIdx] = useState(0);
+
+  const selectedAnimal = animals[selectedIdx];
+
+  const handleSelect = (idx: number) => {
+    setSelectedIdx(idx);
+  };
+
+  const onSelectButtonClick = () => {
+    // Example: redirect to a page based on animal name
+    window.location.href = `/${selectedAnimal.name.toLowerCase()}-selected.html`;
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <>
+      <style>{`
+        body {
+          font-family: 'Segoe UI', Arial, sans-serif;
+          background: #f6f8fa;
+          margin: 0;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          min-height: 100vh;
+        }
+        h1 {
+          margin-top: 40px;
+          font-size: 2.2rem;
+          color: #333;
+        }
+        .animal-list {
+          display: flex;
+          gap: 32px;
+          margin: 40px 0 24px 0;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+        .animal-card {
+          background: #fff;
+          border-radius: 18px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+          padding: 24px 18px 16px 18px;
+          text-align: center;
+          cursor: pointer;
+          transition: box-shadow 0.2s, transform 0.2s;
+          width: 140px;
+          border: 2px solid transparent;
+        }
+        .animal-card.selected {
+          border: 2px solid #4f8cff;
+          box-shadow: 0 4px 16px rgba(79,140,255,0.13);
+          transform: translateY(-4px) scale(1.04);
+        }
+        .animal-emoji {
+          font-size: 2.8rem;
+          margin-bottom: 8px;
+        }
+        .animal-name {
+          font-weight: 600;
+          font-size: 1.1rem;
+          margin-bottom: 4px;
+          color: #222;
+        }
+        .animal-trait {
+          font-size: 0.98rem;
+          color: #666;
+          margin-bottom: 0;
+        }
+        .details {
+          background: #fff;
+          border-radius: 16px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+          padding: 32px 28px;
+          max-width: 420px;
+          margin-top: 18px;
+          min-height: 180px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          animation: fadeIn 0.5s;
+        }
+        .details-emoji {
+          font-size: 2.5rem;
+          margin-bottom: 8px;
+        }
+        .details-title {
+          font-size: 1.3rem;
+          font-weight: 600;
+          margin-bottom: 6px;
+          color: #2a2a2a;
+        }
+        .details-section {
+          margin-bottom: 8px;
+          color: #444;
+          font-size: 1.01rem;
+        }
+        .signature {
+          margin-top: 12px;
+          font-style: italic;
+          color: #4f8cff;
+          font-size: 1.08rem;
+          border-left: 3px solid #4f8cff;
+          padding-left: 12px;
+        }
+        .select-btn {
+          margin-top: 24px;
+          padding: 12px 32px;
+          background: #4f8cff;
+          color: #fff;
+          border: none;
+          border-radius: 8px;
+          font-size: 1.08rem;
+          font-weight: 600;
+          cursor: pointer;
+          box-shadow: 0 2px 8px rgba(79,140,255,0.10);
+          transition: background 0.18s, transform 0.18s;
+          outline: none;
+        }
+        .select-btn:hover, .select-btn:focus {
+          background: #2563eb;
+          transform: translateY(-2px) scale(1.03);
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 700px) {
+          .animal-list { gap: 16px; }
+          .animal-card { width: 110px; padding: 16px 8px 10px 8px; }
+          .details { padding: 18px 8px; }
+        }
+      `}</style>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      <h1>Pick Your Animal Therapist</h1>
+
+      <div className="animal-list" role="list">
+        {animals.map((animal, idx) => (
+          <div
+            key={animal.name}
+            className={`animal-card ${selectedIdx === idx ? 'selected' : ''}`}
+            onClick={() => handleSelect(idx)}
+            role="listitem"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                handleSelect(idx);
+              }
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <div className="animal-emoji" aria-label={animal.name}>
+              {animal.emoji}
+            </div>
+            <div className="animal-name">{animal.name}</div>
+            <div className="animal-trait">{animal.title}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="details" aria-live="polite">
+        <div className="details-emoji">{selectedAnimal.emoji}</div>
+        <div className="details-title">
+          {selectedAnimal.name} – {selectedAnimal.title}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        <div className="details-section">
+          <b>Personality:</b> {selectedAnimal.personality}
+        </div>
+        <div className="details-section">
+          <b>Therapy Style:</b> {selectedAnimal.therapy}
+        </div>
+        <div className="details-section">
+          <b>Specialty:</b> {selectedAnimal.specialty}
+        </div>
+        <div className="signature">{selectedAnimal.signature}</div>
+        <button className="select-btn" onClick={onSelectButtonClick}>
+          Select
+        </button>
+      </div>
+    </>
   );
 }
