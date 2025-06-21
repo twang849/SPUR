@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface Animal {
   emoji: string;
@@ -61,6 +62,7 @@ const animals: Animal[] = [
 
 export default function AnimalTherapistPage() {
   const [selectedIdx, setSelectedIdx] = useState(0);
+  const router = useRouter();
 
   const selectedAnimal = animals[selectedIdx];
 
@@ -70,7 +72,8 @@ export default function AnimalTherapistPage() {
 
   const onSelectButtonClick = () => {
     // Example: redirect to a page based on animal name
-    window.location.href = `/${selectedAnimal.name.toLowerCase()}-selected.html`;
+    router.push(`/animals/${selectedAnimal.name.toLowerCase()}`);
+
   };
 
   return (
