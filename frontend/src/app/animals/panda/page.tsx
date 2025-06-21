@@ -19,13 +19,14 @@ export default function PandaTherapist() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Scroll to bottom when messages update
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
   
-  const speak = (text: string) => {
+  const speakWithBrowser = (text: string) => {
     if (!window.speechSynthesis) return;
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.onstart = () => {
@@ -35,6 +36,42 @@ export default function PandaTherapist() {
       setBotStatus("idle");
     };
     window.speechSynthesis.speak(utterance);
+  };
+
+  const speak = async (text: string) => {
+    setBotStatus("speaking");
+
+    const voiceId = "pNInz6obpgDQGcFmaJgB"; // Adam's voice for Panda
+
+    try {
+      const response = await fetch('/api/tts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text,
+          voiceId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`TTS API request failed with status ${response.status}`);
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+      audio.play();
+      audio.onended = () => {
+        setBotStatus("idle");
+        audioRef.current = null;
+      };
+    } catch (error) {
+      console.error("Error with TTS service:", error);
+      speakWithBrowser(text); // Fallback to browser TTS
+    }
   };
 
   function appendMessage(text: string, sender: "user" | "bot") {
@@ -53,9 +90,9 @@ export default function PandaTherapist() {
     }
     
     setBotStatus("thinking");
-    setTimeout(() => {
+    setTimeout(async () => {
       appendMessage(reply, "bot");
-      speak(reply);
+      await speak(reply);
     }, 600);
   }
 
@@ -123,6 +160,10 @@ export default function PandaTherapist() {
   };
 
   function goBack() {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
