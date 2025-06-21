@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 
 interface TermsModalProps {
   onAccept: () => void;
@@ -42,18 +42,64 @@ export default function TermsModal({ onAccept }: TermsModalProps) {
     return null;
   }
 
+  // Animation variants with proper TypeScript types
+  const backdropVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { duration: 0.5, ease: 'easeOut' }
+    },
+    exit: { 
+      opacity: 0,
+      transition: { duration: 0.4, ease: 'easeIn' }
+    }
+  };
+
+  const modalVariants: Variants = {
+    hidden: { 
+      opacity: 0, 
+      y: 50,
+      scale: 0.97
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: { 
+        type: 'spring' as const,
+        damping: 20,
+        stiffness: 250,
+        mass: 0.8,
+        delay: 0.2
+      }
+    },
+    exit: {
+      opacity: 0,
+      y: 30,
+      scale: 0.98,
+      transition: { 
+        duration: 0.35,
+        ease: 'easeIn'
+      }
+    }
+  };
+
   return (
     <AnimatePresence>
       {isVisible && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+        <motion.div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          variants={backdropVariants}
+        >
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="relative max-h-[80vh] w-full max-w-4xl overflow-hidden rounded-lg bg-white shadow-xl"
+            variants={modalVariants}
+            className="relative max-h-[60vh] w-full max-w-2xl overflow-hidden rounded-lg bg-white shadow-xl"
           >
-            <div className="sticky top-0 bg-white p-4 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-black">Terms and Conditions</h2>
+            <div className="sticky top-0 bg-white p-3 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-black">Terms and Conditions</h2>
             </div>
             
             <div 
@@ -110,22 +156,73 @@ export default function TermsModal({ onAccept }: TermsModalProps) {
               </div>
             </div>
 
-            <div className="sticky bottom-0 bg-white p-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
-              <p className="mb-2 text-black">By clicking "I Agree", you confirm that you have read and agree to our terms.</p>
-              <button
+            <motion.div 
+              className="sticky bottom-0 bg-white p-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ 
+                opacity: 1, 
+                y: 0,
+                transition: { 
+                  delay: 0.4,
+                  type: 'spring',
+                  stiffness: 250,
+                  damping: 20,
+                  mass: 0.8
+                }
+              }}
+            >
+              <motion.p 
+                className="mb-2 text-black"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ 
+                  opacity: 1, 
+                  x: 0,
+                  transition: { 
+                    delay: 0.5,
+                    duration: 0.4,
+                    ease: 'easeOut'
+                  }
+                }}
+              >
+                By clicking "I Agree", you confirm that you have read and agree to our terms.
+              </motion.p>
+              <motion.button
                 onClick={handleAccept}
                 disabled={!hasScrolled}
                 className={`px-6 py-2.5 rounded-md text-white font-medium w-full sm:w-auto ${
                   hasScrolled 
-                    ? 'bg-blue-600 hover:bg-blue-700 transition-colors' 
+                    ? 'bg-blue-600 hover:bg-blue-700' 
                     : 'bg-gray-400 cursor-not-allowed'
                 }`}
+                whileHover={hasScrolled ? { 
+                  scale: 1.02,
+                  transition: { 
+                    type: 'spring', 
+                    stiffness: 300, 
+                    damping: 15,
+                    mass: 0.8
+                  }
+                } : {}}
+                whileTap={hasScrolled ? { 
+                  scale: 0.98,
+                  transition: { duration: 0.1 }
+                } : {}}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ 
+                  opacity: 1, 
+                  y: 0,
+                  transition: { 
+                    delay: 0.6,
+                    duration: 0.4,
+                    ease: 'easeOut'
+                  }
+                }}
               >
                 I Agree
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );
