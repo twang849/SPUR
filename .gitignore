@@ -9,10 +9,11 @@ frontend/node_modules/
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-
+*.pyc
 # testing
 /coverage
-
+agents/__pycache__/
+backend/tools/__pycache__/
 # next.js
 frontend/.next/
 /.next/
