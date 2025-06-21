@@ -15,7 +15,7 @@ export default function FoxTherapist() {
   ]);
   const [input, setInput] = useState("");
   const [botStatus, setBotStatus] = useState("idle"); // idle, listening, speaking, thinking
-  const recognitionRef = useRef<any>(null);
+  const [sessionId] = useState(() => `session_fox_${Date.now()}`);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -90,6 +90,7 @@ export default function FoxTherapist() {
           const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
           const formData = new FormData();
           formData.append('file', audioBlob, 'recording.webm');
+          formData.append('sessionId', sessionId);
 
           try {
             const response = await fetch('/api/transcribe', {
@@ -124,8 +125,8 @@ export default function FoxTherapist() {
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+      mediaRecorderRef.current.stop();
     }
     router.back();
   }
