@@ -14,11 +14,25 @@ export default function FoxTherapist() {
     },
   ]);
   const [input, setInput] = useState("");
+  const [botStatus, setBotStatus] = useState("idle"); // idle, listening, speaking, thinking
+  const recognitionRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+  
+  const speak = (text: string) => {
+    if (!window.speechSynthesis) return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.onstart = () => {
+      setBotStatus("speaking");
+    };
+    utterance.onend = () => {
+      setBotStatus("idle");
+    };
+    window.speechSynthesis.speak(utterance);
+  };
 
   function appendMessage(text: string, sender: "user" | "bot") {
     setMessages((prev) => [...prev, { text, sender }]);
@@ -26,15 +40,20 @@ export default function FoxTherapist() {
 
   function botReply(userText: string) {
     const lower = userText.toLowerCase();
+    let reply = "Interesting. Tell me more about your strategy.";
     if (/hello|hi|hey/.test(lower)) {
-      appendMessage("Greetings. What puzzle are we solving today?", "bot");
+      reply = "Greetings. What puzzle are we solving today?";
     } else if (/stuck|confused|lost/.test(lower)) {
-      appendMessage("Let's look at this from a different angle. There's always a way.", "bot");
+      reply = "Let's look at this from a different angle. There's always a way.";
     } else if (/thank/.test(lower)) {
-      appendMessage("You're welcome. Stay sharp.", "bot");
-    } else {
-      appendMessage("Interesting. Tell me more about your strategy.", "bot");
+      reply = "You're welcome. Stay sharp.";
     }
+    
+    setBotStatus("thinking");
+    setTimeout(() => {
+      appendMessage(reply, "bot");
+      speak(reply);
+    }, 600);
   }
 
   function sendMessage() {
@@ -42,7 +61,7 @@ export default function FoxTherapist() {
     if (!trimmed) return;
     appendMessage(trimmed, "user");
     setInput("");
-    setTimeout(() => botReply(trimmed), 600);
+    botReply(trimmed);
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -51,7 +70,50 @@ export default function FoxTherapist() {
     }
   }
 
+  const handleVoiceClick = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Sorry, your browser doesn't support voice recognition.");
+      return;
+    }
+
+    if (recognitionRef.current && botStatus === "listening") {
+      recognitionRef.current.stop();
+      return;
+    }
+
+    recognitionRef.current = new SpeechRecognition();
+    recognitionRef.current.lang = 'en-US';
+
+    recognitionRef.current.onstart = () => {
+      setBotStatus("listening");
+    };
+
+    recognitionRef.current.onresult = (event: any) => {
+      const userText = event.results[0][0].transcript;
+      appendMessage(userText, "user");
+      botReply(userText);
+    };
+
+    recognitionRef.current.onerror = (event: any) => {
+      console.error('Voice recognition error:', event.error);
+      setBotStatus("idle");
+    };
+
+    recognitionRef.current.onend = () => {
+      setBotStatus("idle");
+    };
+    
+    recognitionRef.current.start();
+  };
+
   function goBack() {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
     router.back();
   }
 
@@ -78,6 +140,19 @@ export default function FoxTherapist() {
           margin-top: 60px;
           margin-bottom: 18px;
           text-align: center;
+          border: 8px solid transparent;
+          border-radius: 50%;
+          padding: 18px;
+          transition: border-color 0.3s ease;
+        }
+        .animal-emoji-large.listening {
+          border-color: #ffc107; /* Yellow */
+        }
+        .animal-emoji-large.speaking {
+          border-color: #10b981; /* Green */
+        }
+        .animal-emoji-large.thinking {
+          border-color: #60a5fa; /* Blue */
         }
         .chatbot-container {
           background: #fff;
@@ -176,13 +251,20 @@ export default function FoxTherapist() {
         .back-btn:hover, .back-btn:focus {
           background: #c7e0ff;
         }
+        .typing-indicator {
+          text-align: center;
+          color: #888;
+          font-style: italic;
+          height: 20px;
+          margin-bottom: 8px;
+        }
       `}</style>
 
       <div className="container">
         <button className="back-btn" onClick={goBack} aria-label="Back to main page">
           ← Back
         </button>
-        <div className="animal-emoji-large" aria-label="Fox emoji">
+        <div className={`animal-emoji-large ${botStatus}`} aria-label="Fox emoji">
           🦊
         </div>
         <div className="chatbot-container" role="region" aria-live="polite" aria-label="Chatbot conversation">
@@ -198,6 +280,11 @@ export default function FoxTherapist() {
               </div>
             ))}
             <div ref={messagesEndRef} />
+          </div>
+          <div className="typing-indicator">
+            {botStatus === 'thinking' && 'Fox is scheming...'}
+            {botStatus === 'listening' && 'Listening...'}
+            {botStatus === 'speaking' && 'Speaking...'}
           </div>
           <div className="chat-input-row">
             <input
@@ -217,7 +304,7 @@ export default function FoxTherapist() {
           <button
             className="voice-btn"
             title="Voice Chat"
-            onClick={() => alert("Voice chat coming soon!")}
+            onClick={handleVoiceClick}
             aria-label="Start voice chat"
           >
             🎤
