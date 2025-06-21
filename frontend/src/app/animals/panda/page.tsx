@@ -96,11 +96,24 @@ export default function PandaTherapist() {
     }, 600);
   }
 
-  function sendMessage() {
+  async function sendMessage() {
     const trimmed = input.trim();
     if (!trimmed) return;
     appendMessage(trimmed, "user");
     setInput("");
+
+    try {
+      await fetch('/api/log-message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: trimmed, sessionId }),
+      });
+    } catch (error) {
+      console.error('Error logging message:', error);
+    }
+    
     botReply(trimmed);
   }
 
