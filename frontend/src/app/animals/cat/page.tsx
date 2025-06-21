@@ -121,6 +121,10 @@ export default function CatTherapist() {
           border: 1px solid #cfd8dc;
           font-size: 1rem;
           outline: none;
+          color: #000;
+        }
+        .chat-input::placeholder {
+          color: #999;
         }
         .send-btn {
           background: #4f8cff;
