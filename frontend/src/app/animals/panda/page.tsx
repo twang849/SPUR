@@ -41,7 +41,7 @@ export default function PandaTherapist() {
   const speak = async (text: string) => {
     setBotStatus("speaking");
 
-    const voiceId = "pNInz6obpgDQGcFmaJgB"; // Adam's voice for Panda
+    const voiceId = "NOpBlnGInO9m6vDvFkFC"; // Arnold's voice for a calm, wise Panda
 
     try {
       const response = await fetch('/api/tts', {
